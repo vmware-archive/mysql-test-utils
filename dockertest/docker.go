@@ -199,3 +199,9 @@ func WithNetwork(network *docker.Network) ContainerOption {
 		}
 	}
 }
+
+func WithUser(username string) ContainerOption {
+	return func(createOpts *docker.CreateContainerOptions) {
+		createOpts.Config.User = username
+	}
+}
