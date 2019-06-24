@@ -1,4 +1,4 @@
-package bosh
+package boshtest
 
 import (
 	"encoding/json"
