@@ -7,7 +7,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/fsouza/go-dockerclient"
+	docker "github.com/fsouza/go-dockerclient"
 	"github.com/onsi/ginkgo"
 )
 
@@ -21,7 +21,7 @@ type ContainerOption func(*docker.CreateContainerOptions)
 
 func ContainerDBConnection(container *docker.Container, port docker.Port) (*sql.DB, error) {
 	hostPort := HostPort(port, container)
-	dbURI := fmt.Sprintf("root@tcp(localhost:%s)/", hostPort)
+	dbURI := fmt.Sprintf("root@tcp(localhost:%s)/?interpolateParams=true", hostPort)
 	return sql.Open("mysql", dbURI)
 }
 
