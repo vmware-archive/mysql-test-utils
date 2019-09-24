@@ -137,7 +137,7 @@ func GetMySQLInstancesSortedByIndex(boshDeployment string) []Instance {
 // ExecuteMysqlQuery as the admin user, asserting that the mysql command exits
 // cleanly and returns the output as a string
 func ExecuteMysqlQueryAsAdmin(deploymentName, instanceIndex, sqlQuery string) string {
-	command := fmt.Sprintf(`mysql --defaults-file=/var/vcap/jobs/mysql/config/mylogin.cnf --silent --silent --execute "%s"`,
+	command := fmt.Sprintf(`sudo mysql --defaults-file=/var/vcap/jobs/mysql/config/mylogin.cnf --silent --silent --execute "%s"`,
 		sqlQuery)
 
 	session := MustSucceed(executeMysqlQuery(deploymentName, instanceIndex, command))
@@ -148,7 +148,7 @@ func ExecuteMysqlQueryAsAdmin(deploymentName, instanceIndex, sqlQuery string) st
 // deploymentName and instance instanceIndex, using credentials in userName and
 // password. It returns a pointer to a gexec.Session to be consumed.
 func ExecuteMysqlQuery(deploymentName, instanceIndex, userName, password, sqlQuery string) *gexec.Session {
-	command := fmt.Sprintf(`MYSQL_PWD="%s" mysql -u %s --silent --silent --execute "%s"`,
+	command := fmt.Sprintf(`MYSQL_PWD="%s" sudo mysql -u %s --silent --silent --execute "%s"`,
 		password,
 		userName,
 		sqlQuery)
