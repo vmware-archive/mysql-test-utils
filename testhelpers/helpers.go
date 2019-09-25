@@ -148,9 +148,9 @@ func ExecuteMysqlQueryAsAdmin(deploymentName, instanceIndex, sqlQuery string) st
 // deploymentName and instance instanceIndex, using credentials in userName and
 // password. It returns a pointer to a gexec.Session to be consumed.
 func ExecuteMysqlQuery(deploymentName, instanceIndex, userName, password, sqlQuery string) *gexec.Session {
-	command := fmt.Sprintf(`MYSQL_PWD="%s" sudo mysql -u %s --silent --silent --execute "%s"`,
-		password,
+	command := fmt.Sprintf(`sudo mysql -u %s -p%s --silent --silent --execute "%s"`,
 		userName,
+		password,
 		sqlQuery)
 
 	return executeMysqlQuery(deploymentName, instanceIndex, command)
