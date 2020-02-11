@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/url"
 	"os"
+	"time"
 
 	proxy "code.cloudfoundry.org/socks5-proxy"
 	"github.com/go-sql-driver/mysql"
@@ -40,7 +41,7 @@ func NewSocks5Dialer(proxyURL string, logger *log.Logger) (proxy.DialFunc, error
 		return nil, errors.Wrap(err, `failed to load private key from disk`)
 	}
 
-	socks5Proxy := proxy.NewSocks5Proxy(proxy.NewHostKey(), logger)
+	socks5Proxy := proxy.NewSocks5Proxy(proxy.NewHostKey(), logger, 15 * time.Second)
 
 	return socks5Proxy.Dialer(userName, string(sshKey), u.Host)
 }
