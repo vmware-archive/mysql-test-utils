@@ -18,7 +18,7 @@ import (
 	"github.com/onsi/gomega/gexec"
 )
 
-const boshPath = "/usr/local/bin/bosh"
+const boshPath = "bosh"
 const TestFailureMessage = `
 *****************************************
 
