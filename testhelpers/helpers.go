@@ -279,7 +279,7 @@ type TestCerts struct {
 	MockServerTLSConfig *tls.Config
 }
 
-func getTestCerts(domains []string) TestCerts {
+func GetTestCerts(domains []string) TestCerts {
 	var sslClientCert, sslClientKey, caCert []byte
 	var err error
 
