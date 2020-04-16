@@ -1,6 +1,8 @@
 package testhelpers
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -12,6 +14,9 @@ import (
 
 	// nolint
 	. "github.com/onsi/gomega"
+
+	"code.cloudfoundry.org/tlsconfig"
+	"code.cloudfoundry.org/tlsconfig/certtest"
 
 	"github.com/cloudfoundry-incubator/cf-test-helpers/commandreporter"
 	"github.com/onsi/ginkgo"
@@ -263,4 +268,71 @@ func FindLeader(deploymentName string) *Instance {
 
 	Expect(len(leaders)).To(Equal(1))
 	return &leaders[0]
+}
+
+type TestCerts struct {
+	CaPEM      string
+	SSLCertPEM string
+	SSLKeyPEM  string
+
+	MockClientTLSConfig *tls.Config
+	MockServerTLSConfig *tls.Config
+}
+
+func getTestCerts(domains []string) TestCerts {
+	var sslClientCert, sslClientKey, caCert []byte
+	var err error
+
+	caCertAuthority, err := certtest.BuildCA("TestCA")
+	Expect(err).NotTo(HaveOccurred())
+
+	caCert, err = caCertAuthority.CertificatePEM()
+	sslClientKeyPair, err := caCertAuthority.BuildSignedCertificate("sslCert")
+
+	Expect(err).NotTo(HaveOccurred())
+	sslClientCert, sslClientKey, err = sslClientKeyPair.CertificatePEMAndPrivateKey()
+	Expect(err).NotTo(HaveOccurred())
+
+
+	caCertPool := x509.NewCertPool()
+	caCertPool.AppendCertsFromPEM(caCert)
+
+	mockCertificate, err := caCertAuthority.BuildSignedCertificate("mockCert", certtest.WithDomains(domains...))
+	Expect(err).NotTo(HaveOccurred())
+
+	tlsServerCertificate, err := mockCertificate.TLSCertificate()
+	Expect(err).NotTo(HaveOccurred())
+
+	mockServerTLSConfig, err := tlsconfig.Build(
+		tlsconfig.WithInternalServiceDefaults(),
+		tlsconfig.WithIdentity(tlsServerCertificate),
+	).Server(
+		tlsconfig.WithClientAuthentication(caCertPool),
+	)
+	Expect(err).NotTo(HaveOccurred())
+
+	var domain string
+	if (len(domains) > 0 ) {
+		domain =  domains[0]
+	} else {
+		domain = ""
+	}
+
+	mockClientTLSConfig, err := tlsconfig.Build(
+		tlsconfig.WithInternalServiceDefaults(),
+		tlsconfig.WithIdentity(tlsServerCertificate),
+	).Client(
+		tlsconfig.WithAuthority(caCertPool),
+		tlsconfig.WithServerName(domain),
+	)
+	Expect(err).NotTo(HaveOccurred())
+
+	return TestCerts{
+		CaPEM:      string(caCert),
+		SSLCertPEM: string(sslClientCert),
+		SSLKeyPEM:  string(sslClientKey),
+
+		MockServerTLSConfig: mockServerTLSConfig,
+		MockClientTLSConfig: mockClientTLSConfig,
+	}
 }
