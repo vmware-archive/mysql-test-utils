@@ -275,8 +275,9 @@ type TestCerts struct {
 	SSLCertPEM string
 	SSLKeyPEM  string
 
-	MockClientTLSConfig *tls.Config
-	MockServerTLSConfig *tls.Config
+	MockClientTLSConfig          *tls.Config
+	MockServerTLSConfig          *tls.Config
+	MockServerNonMutualTLSConfig *tls.Config
 }
 
 func GetTestCerts(domains []string) TestCerts {
@@ -292,7 +293,6 @@ func GetTestCerts(domains []string) TestCerts {
 	Expect(err).NotTo(HaveOccurred())
 	sslClientCert, sslClientKey, err = sslClientKeyPair.CertificatePEMAndPrivateKey()
 	Expect(err).NotTo(HaveOccurred())
-
 
 	caCertPool := x509.NewCertPool()
 	caCertPool.AppendCertsFromPEM(caCert)
@@ -311,9 +311,15 @@ func GetTestCerts(domains []string) TestCerts {
 	)
 	Expect(err).NotTo(HaveOccurred())
 
+	mockServerNonMutualTLSConfig, err := tlsconfig.Build(
+		tlsconfig.WithInternalServiceDefaults(),
+		tlsconfig.WithIdentity(tlsServerCertificate),
+	).Server()
+	Expect(err).NotTo(HaveOccurred())
+
 	var domain string
-	if (len(domains) > 0 ) {
-		domain =  domains[0]
+	if len(domains) > 0 {
+		domain = domains[0]
 	} else {
 		domain = ""
 	}
@@ -332,7 +338,8 @@ func GetTestCerts(domains []string) TestCerts {
 		SSLCertPEM: string(sslClientCert),
 		SSLKeyPEM:  string(sslClientKey),
 
-		MockServerTLSConfig: mockServerTLSConfig,
-		MockClientTLSConfig: mockClientTLSConfig,
+		MockServerTLSConfig:          mockServerTLSConfig,
+		MockClientTLSConfig:          mockClientTLSConfig,
+		MockServerNonMutualTLSConfig: mockServerNonMutualTLSConfig,
 	}
 }
